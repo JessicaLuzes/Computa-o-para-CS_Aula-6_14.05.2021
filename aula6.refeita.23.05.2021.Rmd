@@ -1,0 +1,392 @@
+---
+title: "Untitled"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+rm(list = ls())
+
+UFRJ/IFCS
+Professor: Flávio Carvalhaes
+Aula 6 - 14.05.2021
+Vídeo Parte 1 - Tidyverse II
+https://drive.google.com/drive/u/0/folders/1YWzlSLHe49ymRPquJkEobTD4CMielkgZ
+
+```{r}
+#Dica: Remoção de objetos
+#rm(fake2, fake3, fake4)
+```
+
+
+```{r}
+#Instalando tidyverse
+#install.packages("tidyverse")
+#install.packages("janitor")
+#install.packages("rio")
+
+```
+
+```{r}
+#Carregando pacotes no R
+library("tidyverse")
+library("janitor")
+library("rio")
+```
+
+```{r}
+#Abrindo banco de dados
+url_fake_data <- "https://raw.githubusercontent.com/leobarone/ifch_intro_r/master/data/fake_data.csv"
+## Dado CSV - 
+##delim = ";" - Crie um objeto fake a partir do caminho(URL-data);
+##O delimitador do arquivo CSV é o ponto e vírgula;
+##read_delim - ler arquivos separados por ponto e vírgula...
+```
+
+```{r}
+
+##Obs: Import é um comando do rio...O rio simplifica os comandos!
+##Alternativa para acionar um arquivo da internet:
+fake2<-import(url_fake_data)
+
+##Fake - tem 30 linhas e 13 variáveis...
+
+```
+
+
+```{r}
+fake <- read_delim(url_fake_data, delim = ";", col_names = T)
+
+```
+
+```{r}
+##Agrupando com filter e pull
+##Filter - subconjunto
+#Pull - Lista os valores
+fake %>% filter(sex=="Male")
+fake %>% filter(sex=="Female")
+```
+
+```{r}
+##Income=renda
+##Saber a média do subgrupo...
+fake %>% filter(sex=="Male") %>% pull(income)
+```
+
+
+```{r}
+##Saber a média de renda dos homens...
+fake %>% filter(sex=="Male") %>% pull(income) %>% mean()
+```
+
+```{r}
+##E pode comparar com as mulheres...
+fake %>% filter(sex=="Female") %>% pull(income) %>% mean()
+```
+
+```{r}
+##Summarise
+  ###Opera com as qtts dentro das colunas..
+  ###Nova coluna chamada média_homem...
+  ###Temos que observar que nossa variável de agrupamento só tem 2 grupos: homens e mulheres (sexo biológico)
+  ###Numa estrutura de países não funciona devido a quantidade, com 18 no total...
+
+fake %>% filter(sex=="Male") %>% 
+         summarise(media_homens=mean(income))
+
+###Nova coluna chamada média_homem...
+```
+
+```{r}
+#Cria um objeto de uma observação e de uma variável...
+fake3<-fake %>% filter(sex=="Male") %>% 
+         summarise(media_homens=mean(income))
+```
+
+```{r}
+#Cria um objeto de uma observação e de uma variável...
+
+fake3
+```
+
+
+```{r}
+fake %>% filter(sex=="Female") %>% 
+   summarise(media_mulheres=mean(income))
+
+### Mas esta informação pode ser atribuída a uma niva coluna...
+### A sugestão é para países com mais de uma dezena, utilizamos group_by...
+### Média - Soma de todos os valores (no caso, aqui, a renda) dividido pela quantidade de pessoas...
+### Pode ser a soma das linha qualificadas como mulheres, ou a soma dos sexos...
+###Função é a média
+###?summarise
+
+?summarise
+```
+
+
+```{r}
+#Contagem da qtt de indivíduos do sexo masculino e feminino
+
+fake %>%
+   group_by(sex) %>%
+   summarise(media_renda = n_distinct(income))
+```
+
+
+```{r}
+#Obs: n = n_distinct - conta a qtt de linhas, qtt de observações...
+#Contagem dos grupos - 
+
+fake %>%
+   group_by(sex) %>%
+   summarise(media_renda = n_distinct(income))
+```
+
+```{r}
+#Contagem de observações em cada grupo:
+
+fake%>% count(sex)
+```
+
+```{r}
+#Contagem de observações em cada grupo:
+
+fake%>% count(sex)
+```
+
+
+```{r}
+fake %>%
+   group_by(sex) %>%
+   summarise(media_renda = min(income))
+```
+
+
+```{r}
+#Se a mediana é muito diferente da média, agente sabe que os valores têm concentração nos valores pequenos ou grandes...
+#No caso, aqui, a mediana é próxima da média indicando que existe simetria nos grupos...
+
+fake %>%
+   group_by(sex) %>%
+   summarise(mediana_renda = median(income))
+
+```
+
+```{r}
+#Diferentes números de interesse: média de renda por sexo - Homens ganham mais que mulheres;
+#Desvio padrão da renda - Desvio padrão pequeno todas as rendas são parecidas - Desvio padrão grande as rendas não são parecidas;
+# Média de idade por sexo... Os homens são mais jovens que as mulheres...
+
+fake %>%
+   group_by(sex) %>%
+   summarise(media_renda = mean(income),
+             stdev_renda = sd(income),
+             media_idade = mean(age),
+             soma_eleicoes = sum(vote_history))
+```
+
+```{r}
+# Como países que têm mais de uma dezena, utilizamos group by...(30:12)
+#Group_by - variável de agrupamento...
+#Análise interseccional (group_by(sex,candidate))...Mulheres ricas ou pobres votam em quais candidatos?
+#Qual a média de renda das mulheres que votaram em determinaos candidatos?
+#Exemplo, as mulheres que votaram na Rilari são mais pobres que os homens...
+
+fake %>%
+   group_by(sex, candidate) %>%
+   summarise(media_renda = mean(income))
+```
+
+```{r}
+#Sumários estatísticos
+#Média
+fake %>% 
+   group_by(sex) %>% 
+   summarise(media = mean(income))
+```
+
+```{r}
+#Desvio padrão
+fake %>% 
+   group_by(sex) %>% 
+   summarise(desvpad = sd(income))
+```
+
+```{r}
+#Mediana
+fake %>% 
+   group_by(sex) %>% 
+   summarise(mediana = median(income))
+```
+
+
+```{r}
+#Quantis
+fake %>% 
+   group_by(sex) %>% 
+   summarise(quantil_10 = quantile(income, probs = 0.1), 
+             quantil_25 = quantile(income, probs = 0.25), 
+             quantil_75 = quantile(income, probs = 0.75), 
+             quantil_90 = quantile(income, probs = 0.9))
+```
+
+
+
+```{r}
+
+#Contagem e soma
+fake %>% 
+   group_by(sex) %>% 
+   summarise(contagem = n(), soma = sum(age))
+```
+
+```{r}
+#Removendo NAs 
+fake %>% 
+   group_by(sex) %>% 
+   summarise(media = mean(income, na.rm = TRUE))
+```
+
+
+```{r}
+#Construindo uma tabela como objeto
+# %>% - CTRL + Shift + M
+# Reestruturar o banco para ter menos linhas...Novo objeto reduzido...
+
+
+fake %>%
+   group_by(sex, candidate) %>%
+   summarise(media_renda = mean(income)) %>%
+   pivot_wider(names_from = sex,
+               values_from = media_renda)
+
+```
+
+
+```{r}
+#Criando variáveis com os sumários estatísticos
+# Atribuir o resultado dos códigos a um objeto, no caso, aqui, fake2..
+# Fake2 - criou um objeto com os resultados...
+fake2 <- fake %>% 
+   group_by(sex) %>%
+   summarise(renda_grupo = mean(income)) %>% 
+   ungroup() # Desligando o "group_by" - Boa prática
+```
+
+```{r}
+view(fake2)
+
+```
+
+
+```{r}
+#Testes do professor: Sem atribuir objeto nenhum...
+#Resultado no console...
+#ungroup - desagrupar...
+
+fake %>% 
+   group_by(sex) %>%
+   summarise(renda_grupo = mean(income)) %>% 
+   ungroup() # Desligando o "group_by" - Boa prática
+
+```
+
+```{r}
+# Atribuir o resultado dos códigos a um objeto, no caso, aqui, fake2..
+# Fake2 - criou um objeto com os resultados...
+fake4<- fake %>% 
+   group_by(sex) %>%
+   mutate(renda_grupo = mean(income)) %>% 
+   ungroup() # Desligando o "group_by" - Boa prática
+```
+
+
+```{r}
+fake4
+```
+
+
+```{r}
+#Ordenando os dados
+#Arrange - Ordenar de forma crescente
+#Qual o país que tem menor valor do índice? Ordenar de forma crescente...
+#Qual o país que tem o maior valor? Ordenar de forma crescente...
+#No caso aqui, ordena por idade... Ordem crescente de idade...
+#Qual o membro mais novo do questionário?
+
+fake %>% 
+   arrange(age)
+```
+
+
+```{r}
+#No caso aqui, ordena por idade... Ordem decrescente de idade...
+#Qual o membro mais velho do questionário?
+
+fake %>% 
+   arrange(-age) #ordem decrescente
+```
+
+
+```{r}
+fake %>% 
+   arrange(-age, vote_history) #combinando variáveis
+
+```
+
+
+```{r}
+#em qual candidato as pessoas votaram?
+#Média de renda - apresentar de forma crescente...
+#Qual é a média de renda dos eleitores de cada candidato?
+#None - provavelmente algum tipo de NA;
+
+
+fake %>% 
+   group_by(candidate) %>% 
+   summarise(media_renda = mean(income)) %>% 
+   arrange(media_renda) #candidato por média de renda do eleitor
+```
+
+```{r}
+#slice - fazer uma subseção dos nossos dados..Por exemplo, pegar os 10 primeiros...
+#No caso aqui pegou os dez mais jovens...
+
+fake %>% 
+   arrange(age) %>% 
+  slice_head(n=10)
+```
+
+```{r}
+?slice
+```
+
+
+```{r}
+fake %>% 
+   arrange(age) %>% 
+  slice_head(n=25)
+```
+
+```{r}
+#Pega só os dez primeiros...
+fake%>%  slice_head(n=10)
+```
+
+
+```{r}
+fake2 <- 
+   fake %>% group_by(sex) %>% 
+   mutate(renda_grupo = mean(income)) %>% 
+   ungroup() #desligando o “group_by”
+```
+
+##Acabou a aula...Mas tem seqUencia para a segunda parte...
+
+
+
+
+
